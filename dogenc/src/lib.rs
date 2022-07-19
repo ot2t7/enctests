@@ -5,18 +5,20 @@ use aes_gcm::aead::{Aead, NewAead};
 use rand::random;
 
 fn transfer_bytes(ident: &str, buff: &[u8]) -> TokenStream {
-    let mut tokens: Vec<TokenTree> = vec![];
+    todo!();
+}
 
-    tokens.push(TokenTree::Ident(Ident::new("let", Span::call_site())));
-    tokens.push(TokenTree::Ident(Ident::new(ident, Span::call_site())));
-    tokens.push(TokenTree::Punct(Punct::new('=', proc_macro::Spacing::Alone)));
-    tokens.push(TokenTree::Punct(Punct::new('[', proc_macro::Spacing::Alone)));
-    for n in buff {
-        tokens.push(TokenTree::Literal(Literal::u8_suffixed(*n)));
-    }
-    tokens.push(TokenTree::Punct(Punct::new(']', proc_macro::Spacing::Alone)));
+fn encrypt_constant(constant: &str) -> ([u8 ; 32], [u8 ; 12], Vec<u8>) {
+    let random_key = random::<[u8 ; 32]>();
+    let random_nonce = random::<[u8 ; 12]>();
+    let key = Key::from_slice(&random_key);
+    let nonce = Nonce::from_slice(&random_nonce);
+    let cipher = Aes256Gcm::new(key);
+    let input = constant.to_string();
+    let ciphertext = cipher.encrypt(nonce, input.as_bytes())
+        .expect("encryption failure!");
 
-    return proc_macro::quote!()
+    return (random_key, random_nonce, ciphertext);
 }
 
 #[proc_macro]
@@ -34,14 +36,7 @@ pub fn encrypt_string(input: proc_macro::TokenStream) -> proc_macro::TokenStream
         Err(e) => return e.to_compile_error(),
 
         Ok(litrs::Literal::String(s)) => {
-            let random_key = random::<[u8 ; 32]>();
-            let random_nonce = random::<[u8 ; 12]>();
-            let key = Key::from_slice(&random_key);
-            let nonce = Nonce::from_slice(&random_nonce);
-            let cipher = Aes256Gcm::new(key);
-            let input = s.to_string();
-            let ciphertext = cipher.encrypt(nonce, input.as_bytes())
-                .expect("encryption failure!");
+            let (random_key, random_nonce, ciphertext) = encrypt_constant(&s.to_string());
             println!("{}", String::from_utf8_lossy(&ciphertext));
 
             output = transfer_bytes("something", &random_key);
