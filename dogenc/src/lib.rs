@@ -66,7 +66,7 @@ pub fn encrypt_string(input: proc_macro::TokenStream) -> proc_macro::TokenStream
                     let cipher = aes_gcm::Aes256Gcm::new(key);
     
                     let result = cipher.decrypt(nonce, ciphertext.as_ref()).unwrap();
-                    std::str::from_utf8(&result).unwrap().to_owned()
+                    String::from_utf8(result).unwrap()
                 }
             }
         }
