@@ -1,3 +1,4 @@
 fn main() {
-    dogenc::encrypt_string!("helloo");
+    let our_string = dogenc::encrypt_string!("helloo");
+    println!("{}", our_string);
 }
